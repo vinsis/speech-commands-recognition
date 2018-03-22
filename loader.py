@@ -1,8 +1,10 @@
+import torch
 from torch.utils.data import Dataset
 
 import glob
 import librosa
 import os
+import numpy as np
 
 root = 'speech_commands_v0.01'
 test_file = 'testing_list.txt'
@@ -41,9 +43,12 @@ class AudioLoader(Dataset):
 
     def __getitem__(self, index):
         x, sr = librosa.load(self.file_list[index])
-        x = torch.from_numpy(x).view(1,-1)
+        if len(x) < 22050:
+            x = np.pad(x, (0, 22050 - len(x)), 'constant')
+        x = torch.from_numpy(x)
+        x = x.view(1,-1)
         y = self.class_to_idx[self.file_list[index].split('/')[1]]
-        y = torch.LongTensor(y)
+        y = torch.LongTensor([y])
         return x,y
 
     def __len__(self):
@@ -52,6 +57,6 @@ class AudioLoader(Dataset):
 classes, class_to_idx = find_classes(root)
 train_filenames, validation_filenames, test_filenames = get_file_names(classes)
 
-train = AudioLoader(train_filenames, classes, class_to_idx)
-validate = AudioLoader(validation_filenames, classes, class_to_idx)
-test = AudioLoader(test_filenames, classes, class_to_idx)
+train_data = AudioLoader(train_filenames, classes, class_to_idx)
+validate_data = AudioLoader(validation_filenames, classes, class_to_idx)
+test_data = AudioLoader(test_filenames, classes, class_to_idx)
