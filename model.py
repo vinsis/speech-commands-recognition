@@ -2,14 +2,17 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+import os
 
 import loader
 from loader import train_data, validate_data, test_data
 
 BATCH_SIZE = 64
 EPOCHS = 5
-LR = 0.001
+LR = 0.01
 N = len(loader.classes)
+
+WEIGHT_DIR = './trained_weights'
 
 use_cuda = torch.cuda.is_available()
 criterion = nn.CrossEntropyLoss()
@@ -21,17 +24,23 @@ test_loader = DataLoader(test_data, batch_size = BATCH_SIZE, shuffle = True)
 class ModelCNN(nn.Module):
     def __init__(self):
         super(ModelCNN, self).__init__()
+        self.name = 'fcnn'
         self.main = nn.Sequential(
             nn.Conv1d(1, 5, 90, stride = 6),
             nn.ReLU(True),
+            nn.BatchNorm1d(5),
             nn.Conv1d(5, 15, 31, stride = 6),
             nn.ReLU(True),
-            nn.Conv1d(15, 15, 11, stride = 3),
+            nn.BatchNorm1d(15),
+            nn.Conv1d(15, 25, 11, stride = 3),
             nn.ReLU(True),
-            nn.Conv1d(15, 15, 11, stride = 2),
+            nn.BatchNorm1d(25),
+            nn.Conv1d(25, 15, 11, stride = 2),
             nn.ReLU(True),
+            nn.BatchNorm1d(15),
             nn.Conv1d(15, 5, 7, stride = 3),
             nn.ReLU(True),
+            nn.BatchNorm1d(5),
             nn.Conv1d(5, N, 30),
             nn.ReLU(True)
         )
@@ -45,6 +54,7 @@ optimizer = torch.optim.Adam(model_cnn.parameters(), lr = LR)
 
 def train(model, epoch):
     model.train()
+    print('Learning rate is:', LR)
     for i, (data, target) in enumerate(train_loader):
         target = torch.squeeze(target)
         if use_cuda:
@@ -55,9 +65,12 @@ def train(model, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if i % 50 == 0:
+        if i % 100 == 0:
             print('Epoch [{}], iteration [{}], loss [{}]'.format(epoch, i+1, loss.data[0]))
     test(model, epoch, validate_loader)
+    print('Saving trained model after epoch {}'.format(epoch))
+    filename = '{}_{}.pkl'.format(model.name, epoch)
+    torch.save(model.state_dict(), os.path.join(WEIGHT_DIR, filename))
 
 def test(model, epoch, dataloader):
     model.eval()
@@ -69,4 +82,4 @@ def test(model, epoch, dataloader):
         output = model(data)
         pred = output.data.max(1, keepdim = True)[1]
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-    print('Epoch [{}] Accuracy: [{} / {}]'.format(epoch, correct, len(dataloader.dataset)))
+    print('Evaluation: Epoch [{}] Accuracy: [{} / {}]'.format(epoch, correct, len(dataloader.dataset)))
