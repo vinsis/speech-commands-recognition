@@ -36,15 +36,18 @@ class ModelCNN(nn.Module):
             nn.Conv1d(15, 25, 11, stride = 3),
             nn.ReLU(True),
             nn.BatchNorm1d(25),
-            nn.Conv1d(25, 50, 11, stride = 2),
+            nn.Conv1d(25, 50, 7, stride = 2),
             nn.ReLU(True),
             nn.BatchNorm1d(50),
-            nn.Conv1d(50, 75, 7, stride = 3),
+            nn.Conv1d(50, 75, 5, stride = 2),
             nn.ReLU(True),
             nn.BatchNorm1d(75),
-            nn.AvgPool1d(26)
+            nn.Conv1d(75, 100, 3, stride = 2),
+            nn.ReLU(True),
+            nn.BatchNorm1d(100),
+            nn.AvgPool1d(23)
         )
-        self.fc = nn.Linear(75, N)
+        self.fc = nn.Linear(100, N)
 
     def forward(self, x):
         x = self.main(x)
