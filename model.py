@@ -10,7 +10,8 @@ from loader import train_data, validate_data, test_data
 
 BATCH_SIZE = 64
 EPOCHS = 5
-LR = 0.01
+LR = 0.00001
+GAMMA = 0.3
 N = len(loader.classes)
 
 WEIGHT_DIR = './trained_weights'
@@ -27,30 +28,28 @@ class ModelCNN(nn.Module):
         super(ModelCNN, self).__init__()
         self.name = 'fcnn'
         self.main = nn.Sequential(
-            nn.Conv1d(1, 5, 90, stride = 6),
+            nn.Conv1d(1, 32, 90, stride = 6),
             nn.ReLU(True),
-            nn.BatchNorm1d(5),
-            nn.Conv1d(5, 15, 31, stride = 6),
+            nn.BatchNorm1d(32),
+            nn.Conv1d(32, 64, 31, stride = 6),
             nn.ReLU(True),
-            nn.BatchNorm1d(15),
-            nn.Conv1d(15, 25, 11, stride = 3),
+            nn.BatchNorm1d(64),
+            nn.Conv1d(64, 128, 11, stride = 3),
             nn.ReLU(True),
-            nn.BatchNorm1d(25),
-            nn.Conv1d(25, 50, 7, stride = 2),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 256, 7, stride = 2),
             nn.ReLU(True),
-            nn.BatchNorm1d(50),
-            nn.Conv1d(50, 75, 5, stride = 2),
+            nn.BatchNorm1d(256),
+            nn.Conv1d(256, 512, 5, stride = 2),
             nn.ReLU(True),
-            nn.BatchNorm1d(75),
-            nn.Conv1d(75, 100, 3, stride = 2),
-            nn.ReLU(True),
-            nn.BatchNorm1d(100),
-            nn.AvgPool1d(23)
+            nn.BatchNorm1d(512),
+            nn.AvgPool1d(47)
         )
-        self.fc = nn.Linear(100, N)
+        self.fc = nn.Linear(512, N)
 
     def forward(self, x):
         x = self.main(x)
+        # print(x.size())
         x = x.view(x.size(0),-1)
         x = self.fc(x)
         return x
@@ -58,7 +57,7 @@ class ModelCNN(nn.Module):
 model_cnn = ModelCNN()
 if use_cuda: model_cnn.cuda()
 optimizer = torch.optim.Adam(model_cnn.parameters(), lr = LR)
-scheduler = lr_scheduler.ExponentialLR(optimizer, gamma = 0.6)
+scheduler = lr_scheduler.ExponentialLR(optimizer, gamma = GAMMA)
 
 def train(model, epoch):
     model.train()
