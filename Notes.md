@@ -33,6 +33,14 @@ It was easy to get to this point but after this point, making further improvemen
 
 ### 5. Increasing the number of parameters even more
 
-To make sure my model wasn't constrained by the number of parameters, I decided to go ballistic and significantly increased the number of parameters. I was able to achieve ~87% accuracy on validation and test sets.
+To make sure my model wasn't constrained by the number of parameters, I decided to go ballistic and significantly increased the number of parameters. I was able to achieve accuracies of 88.5% and 87.5% on validation and test sets within six epochs.
 
-__I will keep adding to this section as I make further progress__
+I trained the model further with learning rate 1e-6 but it didn't improve. I guess I am done experimenting.
+
+## Improving accuracy further
+
+Here are some of the things one can try. Note that these steps are written keeping in mind that I am still trying to refrain from MaxPooling and  pre-processing audio (using fourier transform etc):
+
+* Changing the model parameters (kernel size, stride, number of dense layers etc)
+* Tweaking hyperparameters like momentum, L2 weight decay
+* Adding noise to training data to make the learning model more robust
